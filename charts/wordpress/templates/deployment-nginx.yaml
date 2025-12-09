@@ -21,7 +21,7 @@ spec:
         - containerPort: 80
         volumeMounts:
         - name: nginx-config-volume
-          mountPath: /etc/openresty/nginx.conf
+          mountPath: /usr/local/openresty/nginx/conf/nginx.conf
           subPath: nginx.conf
       volumes:
       - name: nginx-config-volume
