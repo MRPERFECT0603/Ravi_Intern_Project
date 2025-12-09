@@ -1,0 +1,14 @@
+wordpress:
+  image:
+    repository: vivekshaurya/wordpress
+    tag: latest
+
+mysql:
+  image:
+    repository: vivekshaurya/mysql
+    tag: latest
+
+nginx:
+  image:
+    repository: vivekshaurya/nginx-openresty
+    tag: latest
