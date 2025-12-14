@@ -1,27 +1,35 @@
-# 🚀 Production-Ready WordPress Deployment on Kubernetes  
-### Custom Docker Images • Helm • Nginx Reverse Proxy • MySQL • Prometheus • Alertmanager • Grafana
+
+# HelmFlow — Production-Ready WordPress on Kubernetes
+
+**Helm • Kubernetes • Custom Docker Images • Nginx (OpenResty) • MySQL • Prometheus • Grafana • Alertmanager**
 
 ---
 
-## 📌 Overview
+## Overview
 
-This project implements a **real production-style WordPress deployment** on Kubernetes using:
+**HelmFlow** is a production-style WordPress deployment on Kubernetes, built to demonstrate how real-world DevOps teams package, deploy, configure, and monitor applications using **Helm**.
 
-✔ Helm chart  
-✔ Custom-built Docker images  
-✔ Persistent storage  
-✔ Nginx reverse proxy  
-✔ Prometheus monitoring  
-✔ Grafana dashboards  
-✔ Alertmanager alerts
+This project focuses on:
+- Converting raw Kubernetes YAML into a **reusable Helm chart**
+- Supporting **multiple environments (dev / prod)** using Helm values
+- Running **stateful workloads** with persistent storage
+- Adding **observability** using Prometheus, Grafana, and Alertmanager
 
-The project teaches end-to-end DevOps — from infrastructure to observability.
+This is a **hands-on, industry-aligned project**, not a toy example.
 
 ---
 
+##  Key Objectives
+
+- Build a reusable Helm chart for a multi-service application
+- Support multiple environments using Helm values files
+- Use custom Docker images instead of prebuilt charts
+- Implement production-style Kubernetes patterns
+- Add monitoring and alerting for visibility
+
 ---
 
-## 🏗 Architecture
+##  Architecture
 
 ```mermaid
 flowchart LR
@@ -32,28 +40,25 @@ flowchart LR
     Prometheus -->|scrapes| WordPress
     Prometheus -->|scrapes| MySQL
     Grafana --> Prometheus
-    AlertManager --> Prometheus
+    Alertmanager --> Prometheus
 ```
 
 ---
 
----
+##  Features
 
-## 🔥 Features
-
-✔ WordPress FPM deployed on Kubernetes  
-✔ MySQL backend  
-✔ OpenResty (NGINX + Lua) reverse proxy  
-✔ ReadWriteMany PVC for WordPress storage  
-✔ Prometheus scraping + kube metrics  
-✔ Grafana dashboards: CPU, memory, requests, 5xx errors  
-✔ Alerting support included  
-
----
+- WordPress (PHP-FPM) deployed on Kubernetes
+- MySQL backend with persistent storage
+- OpenResty (NGINX + Lua) reverse proxy
+- Helm-based deployment with reusable templates
+- Environment-specific configuration using values files
+- Prometheus metrics scraping
+- Grafana dashboards for application and pod metrics
+- Alertmanager integration for alerting
 
 ---
 
-## 📂 Repository Structure
+##  Repository Structure
 
 ```
 .
@@ -61,7 +66,10 @@ flowchart LR
 │   └── wordpress/
 │       ├── Chart.yaml
 │       ├── values.yaml
+│       ├── values-dev.yaml
+│       ├── values-prod.yaml
 │       └── templates/
+│           ├── _helpers.tpl
 │           ├── deployment-mysql.yaml
 │           ├── deployment-nginx.yaml
 │           ├── deployment-wordpress.yaml
@@ -82,25 +90,19 @@ flowchart LR
 
 ---
 
----
+## ✔ Prerequisites
 
-## ✔ Prerequisites Checklist
-
-➡ Kubernetes cluster (Docker Desktop works)  
-➡ Helm installed  
-➡ kubectl installed  
-➡ Docker Hub account  
-➡ Git installed  
+- Kubernetes cluster (Docker Desktop / Minikube / Kind)
+- Helm 3.x installed
+- kubectl installed and configured
+- Docker & Docker Hub account
+- Git
 
 ---
 
----
+##  Setup Instructions
 
-## 🔧 Step-by-Step Setup
-
----
-
-### Step 1 — Clone Repository
+### Step 1 — Clone the Repository
 
 ```bash
 git clone <repo-url>
@@ -129,13 +131,18 @@ docker push <dockerhub-user>/nginx-openresty:latest
 
 ---
 
----
+##  Deploy Using Helm
 
-## 🚀 Deploy WordPress Stack using Helm
+### Development Environment
 
 ```bash
-cd charts/wordpress
-helm install my-release .
+helm install blog-dev charts/wordpress -f charts/wordpress/values-dev.yaml
+```
+
+### Production Environment
+
+```bash
+helm install blog-prod charts/wordpress -f charts/wordpress/values-prod.yaml
 ```
 
 Verify:
@@ -148,135 +155,106 @@ kubectl get pvc
 
 ---
 
----
-
-## 📌 Access WordPress UI
+##  Access WordPress
 
 ```bash
-kubectl port-forward svc/nginx-service 8080:80
+kubectl port-forward svc/blog-wordpress-nginx 8080:80
 ```
 
-Open browser:
+Open in browser:
 
-👉 http://localhost:8080
-
----
+    http://localhost:8080
 
 ---
 
-## 📡 Monitoring Setup
+##  Monitoring Setup
 
-### Step 1 — Add kube-prometheus-stack Helm repo
+### Install kube-prometheus-stack
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-```
-
-### Step 2 — Install monitoring stack
-
-```bash
 helm install monitoring prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
 ```
 
 ---
 
----
-
-## 🎛 Access Grafana
-
-Get password:
+## Access Grafana
 
 ```bash
 kubectl get secret monitoring-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode
-```
-
-Port forward:
-
-```bash
 kubectl port-forward svc/monitoring-grafana 3000:80 -n monitoring
 ```
 
-Open browser:
+Open:
 
-👉 http://localhost:3000  
+    http://localhost:3000  
 Login: `admin / <password>`
 
 ---
 
----
+## Example PromQL Queries
 
-## 📊 Create Custom Dashboards
-
-### Pod CPU
-
+**Pod CPU**
 ```
 sum(rate(container_cpu_usage_seconds_total{namespace="default"}[2m])) by (pod)
 ```
 
-### Pod Memory
-
+**Pod Memory**
 ```
 sum(container_memory_usage_bytes{namespace="default"}) by (pod)
 ```
 
-### Nginx Requests
-
+**NGINX Requests**
 ```
 sum(rate(nginx_ingress_controller_requests_total[1m])) by (status)
 ```
 
-### Nginx 5xx Errors
-
+**NGINX 5xx Errors**
 ```
 sum(rate(nginx_ingress_controller_requests_total{status=~"5.."}[2m]))
 ```
 
-Save dashboard as `WordPress Monitoring`.
+---
+
+## Troubleshooting
+
+| Issue | Resolution |
+|-----|------------|
+| NGINX CrashLoop | Check ConfigMap mount path |
+| WordPress not loading | Verify service & port-forward |
+| Grafana shows no data | Check Prometheus targets |
+| PVC pending | Verify storage class |
 
 ---
 
----
-
-## 🚨 Troubleshooting Guide
-
-| Issue | Fix |
-|------|-----|
-| `CrashLoopBackOff nginx` | ConfigMap incorrectly mounted — fix mount path |
-| WordPress page not loading | Use port-forward or external LB |
-| Grafana “No Data” | Check Prometheus targets |
-| Node exporter crash | Patch security context on Docker Desktop |
-
----
-
----
-
-## 🧹 Cleanup
+## Cleanup
 
 ```bash
-helm delete my-release
-helm delete monitoring -n monitoring
+helm uninstall blog-dev
+helm uninstall blog-prod
+helm uninstall monitoring -n monitoring
 kubectl delete ns monitoring
 ```
 
 ---
 
----
+## Future Enhancements
 
-## 🚀 Future Enhancements
-
-✔ Horizontal Pod Autoscaler  
-✔ SSL termination  
-✔ Ingress Controller  
-✔ CI/CD deployment  
+- Horizontal Pod Autoscaler (HPA)
+- HTTPS with Ingress + Cert-Manager
+- CI/CD pipeline integration
+- Secrets management
 
 ---
 
+## Maintainer
+
+**Vivek Shaurya**  
+GitHub: **mrperfect0603**
+
+
 ---
 
-## 👨‍💻 Maintainer
-
-👤 Vivek Shaurya  
-📩 GitHub: _mrperfect0603_
-
-Feel free to fork, star ⭐ and improve!
+If you found this project helpful, feel free to fork, star, and contribute!\
+Love 💙 & Peace ☮️
