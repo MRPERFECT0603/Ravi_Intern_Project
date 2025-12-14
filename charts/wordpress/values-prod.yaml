@@ -1,0 +1,13 @@
+wordpress:
+  replicaCount: 2
+  persistence:
+    enabled: true
+    size: 10Gi
+
+mysql:
+  persistence:
+    enabled: true
+    size: 20Gi
+
+nginx:
+  replicaCount: 2

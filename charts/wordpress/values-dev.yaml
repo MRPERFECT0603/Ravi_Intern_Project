@@ -1,0 +1,7 @@
+wordpress:
+  persistence:
+    enabled: false
+
+mysql:
+  persistence:
+    enabled: false
